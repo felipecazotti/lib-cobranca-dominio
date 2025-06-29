@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Cobranca.Lib.Dominio.Models;
 
-internal abstract class CobrancaBase
+public abstract class CobrancaBase
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
