@@ -6,6 +6,17 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+	<TargetFramework>net8.0</TargetFramework>
+	<PackageId>Cobranca.Lib.Dominio</PackageId>
+	<Authors>Felipe Cazotti</Authors>
+	<Description>Biblioteca de domínio para gestão de cobranças</Description>
+	<PackageLicense>MIT</PackageLicense>
+	<RepositoryUrl>https://github.com/felipecazotti/lib-cobranca-dominio</RepositoryUrl>
+	<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	<!-- Versão será definida automaticamente pelo workflow -->
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
   </ItemGroup>
