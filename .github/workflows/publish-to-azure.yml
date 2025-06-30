@@ -1,23 +1,29 @@
 name: Publish NuGet to Azure Artifacts
-
 on:
   push:
     tags:
-      - 'v*'  # Gatilho para versões como v1.0.0
+      - 'v*'  # Gatilho para versões como v1.0.0, v1.2.3, etc.
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout código
       uses: actions/checkout@v3
-
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
-
+        
+    - name: Extrair versão da tag
+      id: get_version
+      run: |
+        # Remove o prefixo 'v' da tag (v1.0.0 -> 1.0.0)
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Versão extraída: $VERSION"
+        
     - name: Adicionar feed do Azure Artifacts
       run: |
         dotnet nuget add source \
@@ -26,15 +32,52 @@ jobs:
           --store-password-in-clear-text \
           --name AzureArtifacts \
           "https://pkgs.dev.azure.com/felipecazotti/gestao_cobrancas/_packaging/NugetPrivado/nuget/v3/index.json"
-
+          
     - name: Restaurar dependências
       run: dotnet restore
-
-    - name: Build e empacotar
-      run: dotnet pack --configuration Release
-
-    - name: Publicar pacote
+      
+    - name: Build e empacotar com versão automática
       run: |
-        dotnet nuget push bin/Release/*.nupkg \
+        dotnet pack \
+          --configuration Release \
+          --output ./packages \
+          -p:PackageVersion=${{ steps.get_version.outputs.VERSION }} \
+          -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }} \
+          -p:FileVersion=${{ steps.get_version.outputs.VERSION }}
+        
+    - name: Debug - Verificar versão e arquivos gerados
+      run: |
+        echo "Versão sendo usada: ${{ steps.get_version.outputs.VERSION }}"
+        echo "Tag original: ${{ github.ref }}"
+        echo "Conteúdo da pasta packages:"
+        ls -la ./packages/
+        echo "Arquivos .nupkg encontrados:"
+        find ./packages -name "*.nupkg" -type f
+        
+    - name: Publicar pacote no Azure Artifacts
+      run: |
+        dotnet nuget push "./packages/*.nupkg" \
           --source AzureArtifacts \
-          --api-key az
+          --api-key az \
+          --skip-duplicate
+          
+    - name: Criar release no GitHub
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## 📦 Pacote NuGet Publicado
+          
+          **Versão:** ${{ steps.get_version.outputs.VERSION }}
+          
+          O pacote foi publicado com sucesso no Azure Artifacts.
+          
+          ### Como usar:
+          ```xml
+          <PackageReference Include="SeuPacote" Version="${{ steps.get_version.outputs.VERSION }}" />
+          ```
+        draft: false
+        prerelease: false
