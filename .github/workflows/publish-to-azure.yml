@@ -1,0 +1,40 @@
+name: Publish NuGet to Azure Artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'  # Gatilho para versões como v1.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Adicionar feed do Azure Artifacts
+      run: |
+        dotnet nuget add source \
+          --username anything \
+          --password ${{ secrets.AZURE_DEVOPS_PAT }} \
+          --store-password-in-clear-text \
+          --name AzureArtifacts \
+          "https://pkgs.dev.azure.com/felipecazotti/gestao_cobrancas/_packaging/NugetPrivado/nuget/v3/index.json"
+
+    - name: Restaurar dependências
+      run: dotnet restore
+
+    - name: Build e empacotar
+      run: dotnet pack --configuration Release
+
+    - name: Publicar pacote
+      run: |
+        dotnet nuget push bin/Release/*.nupkg \
+          --source AzureArtifacts \
+          --api-key az
