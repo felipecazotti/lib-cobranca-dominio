@@ -32,4 +32,7 @@ public abstract class CobrancaBase
 
     [BsonElement("qrCode")]
     public required string QrCode { get; set; }
+
+    [BsonElement("dataHoraRegistroCobranca")]
+    public required DateTime DataHoraRegistroCobranca { get; set; }
 }
