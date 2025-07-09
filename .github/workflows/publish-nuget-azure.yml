@@ -31,7 +31,7 @@ jobs:
           --password ${{ secrets.AZURE_DEVOPS_PAT }} \
           --store-password-in-clear-text \
           --name AzureArtifacts \
-          "https://pkgs.dev.azure.com/felipecazotti/gestao_cobrancas/_packaging/NugetPrivado/nuget/v3/index.json"
+          "https://pkgs.dev.azure.com/felipecazotti/gestao_cobrancas/_packaging/nuget_felipecazotti/nuget/v3/index.json"
           
     - name: Restaurar dependências
       run: dotnet restore
